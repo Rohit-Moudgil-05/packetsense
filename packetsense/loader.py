@@ -265,7 +265,15 @@ def reconstruct_missing_fields(df: pd.DataFrame, mode: str = "auto") -> pd.DataF
         # fallback
         return 0
 
-    df["protocol"] = df.apply(guess_proto, axis=1)
+    # df["protocol"] = df.apply(guess_proto, axis=1)
+    protocol_series = df.apply(lambda row: guess_proto(row), axis=1)
+
+    # Ensure scalar output
+    protocol_series = protocol_series.apply(
+        lambda x: x if isinstance(x, (str, int, float)) else str(x)
+    )
+
+    df["protocol"] = protocol_series
 
     # generate session_id if missing
     if "session_id" not in df.columns:
