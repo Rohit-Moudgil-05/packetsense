@@ -1,0 +1,30 @@
+
+- name: High packet count flow
+  scope: flow
+  description: "Flow with many packets — possible DDoS source"
+  conditions:
+    - field: num_packets
+      op: '>'
+      value: 2000
+  action: alert
+  confidence: 0.95
+
+- name: Port scan heuristic
+  scope: flow
+  description: "Flow with many unique dst ports — scan"
+  conditions:
+    - field: unique_dst_ports
+      op: '>'
+      value: 50
+  action: alert
+  confidence: 0.8
+
+- name: Suspicious small-packet burst (packet rule)
+  scope: packet
+  description: "Very small packets to many destinations"
+  conditions:
+    - field: packet_len
+      op: '<'
+      value: 60
+  action: alert
+  confidence: 0.6

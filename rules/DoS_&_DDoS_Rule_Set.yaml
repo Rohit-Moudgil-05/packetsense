@@ -1,0 +1,949 @@
+rules:
+
+  - name: High packet count flow
+    scope: flow
+    description: "Flow with many packets – possible DoS/DDoS source"
+    conditions:
+      - field: num_packets
+        op: '>'
+        value: 2000
+    action: alert
+    confidence: 0.95
+
+  - name: Excessive bandwidth usage
+    scope: flow
+    description: "Flow generating abnormally high byte volume"
+    conditions:
+      - field: total_bytes
+        op: '>'
+        value: 5000000
+    action: alert
+    confidence: 0.90
+
+  - name: Packet rate burst
+    scope: flow
+    description: "High packets-per-second rate"
+    conditions:
+      - field: packets_per_second
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.96
+
+  - name: Fan-out destination attack
+    scope: flow
+    description: "Source hitting too many unique destination IPs – possible botnet"
+    conditions:
+      - field: unique_dst_ips
+        op: '>'
+        value: 20
+    action: alert
+    confidence: 0.85
+
+  - name: Port scan heuristic
+    scope: flow
+    description: "Flow with many unique dst ports – scan"
+    conditions:
+      - field: unique_dst_ports
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.8
+
+  - name: Suspicious small-packet burst
+    scope: packet
+    description: "Very small packets to many destinations"
+    conditions:
+      - field: packet_len
+        op: '<'
+        value: 60
+    action: alert
+    confidence: 0.6
+
+  - name: Oversized packet flood
+    scope: packet
+    description: "Very large packets repeatedly – potential DoS"
+    conditions:
+      - field: packet_len
+        op: '>'
+        value: 1400
+    action: alert
+    confidence: 0.7
+
+  - name: SYN flood detector
+    scope: flow
+    description: "High SYN packets without ACK"
+    conditions:
+      - field: syn_count
+        op: '>'
+        value: 500
+      - field: ack_count
+        op: '<'
+        value: 10
+    action: alert
+    confidence: 0.95
+
+  - name: Half-open connection surge
+    scope: host
+    description: "Abnormally high half-open TCP sessions"
+    conditions:
+      - field: tcp_half_open
+        op: '>'
+        value: 300
+    action: alert
+    confidence: 0.97
+
+  - name: UDP flood detector
+    scope: flow
+    description: "High rate of UDP packets – DDoS"
+    conditions:
+      - field: udp_count
+        op: '>'
+        value: 1500
+    action: alert
+    confidence: 0.90
+
+  - name: UDP reflection signature
+    scope: flow
+    description: "Small request, large response — amplification pattern"
+    conditions:
+      - field: avg_packet_len
+        op: '<'
+        value: 100
+      - field: response_packet_len
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.92
+
+  - name: ICMP echo flood
+    scope: flow
+    description: "Massive ICMP echo requests"
+    conditions:
+      - field: icmp_echo_count
+        op: '>'
+        value: 800
+    action: alert
+    confidence: 0.93
+
+  - name: ICMP unreachable anomaly
+    scope: host
+    description: "High ICMP unreachable indicates network saturation"
+    conditions:
+      - field: icmp_unreach_count
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.75
+
+  - name: Slowloris detector
+    scope: flow
+    description: "Many slow, long-lived, partial HTTP connections"
+    conditions:
+      - field: long_lived_connections
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.92
+
+  - name: Incomplete HTTP header flood
+    scope: flow
+    description: "DoS via slow HTTP header trickling"
+    conditions:
+      - field: incomplete_http_headers
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.85
+
+  - name: Host outbound connection burst
+    scope: host
+    description: "Host suddenly initiates too many connections – possible botnet"
+    conditions:
+      - field: connections_outbound
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.88
+
+  - name: Repeated failed connections
+    scope: host
+    description: "Failed connections spike – target overwhelmed"
+    conditions:
+      - field: connection_failures
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.78
+
+  - name: Flow statistical outlier
+    scope: flow
+    description: "Flow deviates >3σ from normal baseline"
+    conditions:
+      - field: z_score
+        op: '>'
+        value: 3
+    action: alert
+    confidence: 0.9
+
+  - name: Abrupt packet rate increase
+    scope: host
+    description: "PPS rate jumped significantly from previous window"
+    conditions:
+      - field: delta_pps
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.85
+
+  - name: DNS query spike
+    scope: flow
+    description: "Too many DNS queries per second from same host"
+    conditions:
+      - field: dns_query_count
+        op: '>'
+        value: 300
+    action: alert
+    confidence: 0.91
+
+  - name: NTP amplification signature
+    scope: flow
+    description: "High rate of NTP monlist/amplification traffic"
+    conditions:
+      - field: ntp_monlist_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.94
+
+  - name: Botnet synchronized flood
+    scope: global
+    description: "Multiple sources hitting same target at similar time"
+    conditions:
+      - field: coordinated_sources
+        op: '>'
+        value: 10
+    action: alert
+    confidence: 0.98
+
+  - name: New IP surge
+    scope: target
+    description: "Sudden surge of new unique source IPs"
+    conditions:
+      - field: new_sources_per_min
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.9
+
+rules:
+  # --- Original 23 (kept verbatim / slightly normalized) ---
+  - name: High packet count flow
+    scope: flow
+    description: "Flow with many packets – possible DoS/DDoS source"
+    conditions:
+      - field: num_packets
+        op: '>'
+        value: 2000
+    action: alert
+    confidence: 0.95
+
+  - name: Excessive bandwidth usage
+    scope: flow
+    description: "Flow generating abnormally high byte volume"
+    conditions:
+      - field: total_bytes
+        op: '>'
+        value: 5000000
+    action: alert
+    confidence: 0.90
+
+  - name: Packet rate burst
+    scope: flow
+    description: "High packets-per-second rate"
+    conditions:
+      - field: packets_per_second
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.96
+
+  - name: Fan-out destination attack
+    scope: flow
+    description: "Source hitting too many unique destination IPs – possible botnet"
+    conditions:
+      - field: unique_dst_ips
+        op: '>'
+        value: 20
+    action: alert
+    confidence: 0.85
+
+  - name: Port scan heuristic
+    scope: flow
+    description: "Flow with many unique dst ports – scan"
+    conditions:
+      - field: unique_dst_ports
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.8
+
+  - name: Suspicious small-packet burst
+    scope: packet
+    description: "Very small packets to many destinations"
+    conditions:
+      - field: packet_len
+        op: '<'
+        value: 60
+    action: alert
+    confidence: 0.6
+
+  - name: Oversized packet flood
+    scope: packet
+    description: "Very large packets repeatedly – potential DoS"
+    conditions:
+      - field: packet_len
+        op: '>'
+        value: 1400
+    action: alert
+    confidence: 0.7
+
+  - name: SYN flood detector
+    scope: flow
+    description: "High SYN packets without ACK"
+    conditions:
+      - field: syn_count
+        op: '>'
+        value: 500
+      - field: ack_count
+        op: '<'
+        value: 10
+    action: alert
+    confidence: 0.95
+
+  - name: Half-open connection surge
+    scope: host
+    description: "Abnormally high half-open TCP sessions"
+    conditions:
+      - field: tcp_half_open
+        op: '>'
+        value: 300
+    action: alert
+    confidence: 0.97
+
+  - name: UDP flood detector
+    scope: flow
+    description: "High rate of UDP packets – DDoS"
+    conditions:
+      - field: udp_count
+        op: '>'
+        value: 1500
+    action: alert
+    confidence: 0.90
+
+  - name: UDP reflection signature
+    scope: flow
+    description: "Small request, large response — amplification pattern"
+    conditions:
+      - field: avg_packet_len
+        op: '<'
+        value: 100
+      - field: response_packet_len
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.92
+
+  - name: ICMP echo flood
+    scope: flow
+    description: "Massive ICMP echo requests"
+    conditions:
+      - field: icmp_echo_count
+        op: '>'
+        value: 800
+    action: alert
+    confidence: 0.93
+
+  - name: ICMP unreachable anomaly
+    scope: host
+    description: "High ICMP unreachable indicates network saturation"
+    conditions:
+      - field: icmp_unreach_count
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.75
+
+  - name: Slowloris detector
+    scope: flow
+    description: "Many slow, long-lived, partial HTTP connections"
+    conditions:
+      - field: long_lived_connections
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.92
+
+  - name: Incomplete HTTP header flood
+    scope: flow
+    description: "DoS via slow HTTP header trickling"
+    conditions:
+      - field: incomplete_http_headers
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.85
+
+  - name: Host outbound connection burst
+    scope: host
+    description: "Host suddenly initiates too many connections – possible botnet"
+    conditions:
+      - field: connections_outbound
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.88
+
+  - name: Repeated failed connections
+    scope: host
+    description: "Failed connections spike – target overwhelmed"
+    conditions:
+      - field: connection_failures
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.78
+
+  - name: Flow statistical outlier
+    scope: flow
+    description: "Flow deviates >3σ from normal baseline"
+    conditions:
+      - field: z_score
+        op: '>'
+        value: 3
+    action: alert
+    confidence: 0.9
+
+  - name: Abrupt packet rate increase
+    scope: host
+    description: "PPS rate jumped significantly from previous window"
+    conditions:
+      - field: delta_pps
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.85
+
+  - name: DNS query spike
+    scope: flow
+    description: "Too many DNS queries per second from same host"
+    conditions:
+      - field: dns_query_count
+        op: '>'
+        value: 300
+    action: alert
+    confidence: 0.91
+
+  - name: NTP amplification signature
+    scope: flow
+    description: "High rate of NTP monlist/amplification traffic"
+    conditions:
+      - field: ntp_monlist_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.94
+
+  - name: Botnet synchronized flood
+    scope: global
+    description: "Multiple sources hitting same target at similar time"
+    conditions:
+      - field: coordinated_sources
+        op: '>'
+        value: 10
+    action: alert
+    confidence: 0.98
+
+  - name: New IP surge
+    scope: target
+    description: "Sudden surge of new unique source IPs"
+    conditions:
+      - field: new_sources_per_min
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.9
+
+  
+  - name: Many distinct src ports per src ip
+    scope: flow
+    description: "Source using many source ports - scripted flood or reflection"
+    conditions:
+      - field: unique_src_ports
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.7
+
+  - name: Many dst ports per dst ip
+    scope: flow
+    description: "Target receiving traffic to many destination ports - sweep or flood"
+    conditions:
+      - field: unique_dst_ports_per_target
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.7
+
+  - name: Excessive SYN retransmits
+    scope: host
+    description: "Many SYN retries from same src - possible SYN flood attempting retries"
+    conditions:
+      - field: syn_retransmits
+        op: '>'
+        value: 400
+    action: alert
+    confidence: 0.9
+
+  - name: High RST count from many sources
+    scope: target
+    description: "RST spikes can indicate connection churn under load"
+    conditions:
+      - field: rst_count
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.6
+
+  - name: High FIN count abnormal
+    scope: host
+    description: "Many FINs may indicate tear-down storms"
+    conditions:
+      - field: fin_count
+        op: '>'
+        value: 800
+    action: alert
+    confidence: 0.6
+
+  - name: Repeated small UDP to high ports
+    scope: flow
+    description: "UDP pings to ephemeral ports - scanning or data-plane abuse"
+    conditions:
+      - field: udp_to_high_ports
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.65
+
+  - name: Large ephemeral bursts to same dst ip
+    scope: target
+    description: "Many short flows to same target within minute"
+    conditions:
+      - field: short_lived_flows_per_min
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.85
+
+  - name: Suspicious DNS non-recursive queries spike
+    scope: flow
+    description: "Large number of DNS queries with recursion desired=0"
+    conditions:
+      - field: dns_rd_flag_zero_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.75
+
+  - name: Large HTTP POST body count
+    scope: flow
+    description: "Many large POSTs may be HTTP-POST flood"
+    conditions:
+      - field: http_post_count
+        op: '>'
+        value: 300
+      - field: avg_post_size
+        op: '>'
+        value: 10000
+    action: alert
+    confidence: 0.88
+
+  - name: Many simultaneous TLS handshakes
+    scope: host
+    description: "High rate of TLS handshakes may cause CPU exhaustion"
+    conditions:
+      - field: tls_handshake_rate
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.9
+
+  - name: Short inter-packet gap flood
+    scope: flow
+    description: "Very low inter-packet intervals indicating automated flood"
+    conditions:
+      - field: avg_inter_packet_gap_ms
+        op: '<'
+        value: 1
+    action: alert
+    confidence: 0.9
+
+  - name: Many unique user-agents per source
+    scope: flow
+    description: "Source hitting web service with many user-agents - bot behaviour"
+    conditions:
+      - field: unique_user_agents
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.7
+
+  - name: Repeated identical payload requests
+    scope: flow
+    description: "Repeated identical HTTP payloads from source - replay/flood"
+    conditions:
+      - field: repeated_payload_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.78
+
+  - name: Many different host headers to same backend
+    scope: target
+    description: "Host header churn to same IP - probing/misuse"
+    conditions:
+      - field: unique_host_headers
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.7
+
+  - name: Sudden protocol shift on host
+    scope: host
+    description: "Host switches to high UDP activity from previously TCP heavy"
+    conditions:
+      - field: protocol_ratio_change
+        op: '>'
+        value: 0.5
+    action: alert
+    confidence: 0.75
+
+  - name: Many truncated TLS records
+    scope: flow
+    description: "Frequent truncated TLS records - suspicious load or malformed flood"
+    conditions:
+      - field: tls_truncated_record_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.7
+
+  - name: High SYN from many distinct source IPs (DDoS fan-in)
+    scope: target
+    description: "Target receiving SYN from many unique IPs"
+    conditions:
+      - field: unique_syn_sources
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.95
+
+  - name: Many new ephemeral connections to same port
+    scope: target
+    description: "Spike of new ephemeral connections to a single port"
+    conditions:
+      - field: new_connections_to_port
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.9
+
+  - name: NTP mode 6/7 exploitation pattern
+    scope: flow
+    description: "NTP commands/responses that look like amplification probes"
+    conditions:
+      - field: ntp_mode_6or7_count
+        op: '>'
+        value: 20
+    action: alert
+    confidence: 0.9
+
+  - name: DNS ANY queries surge
+    scope: flow
+    description: "High count of DNS ANY queries (amplification probe)"
+    conditions:
+      - field: dns_any_query_count
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.93
+
+  - name: SSDP/UPnP UDP amplification signature
+    scope: flow
+    description: "SSDP responses large dsize from many devices"
+    conditions:
+      - field: ssdp_response_large_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.9
+
+  - name: Memcached-like UDP large responses
+    scope: flow
+    description: "Large UDP responses, possible memcached amplification"
+    conditions:
+      - field: udp_large_response_count
+        op: '>'
+        value: 20
+    action: alert
+    confidence: 0.95
+
+  - name: High SYN with spoofed source pattern
+    scope: flow
+    description: "SYNs where src IPs are non-routable or in odd subnets (possible spoofing)"
+    conditions:
+      - field: syn_spoofed_src_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.9
+
+  - name: Port unreachable storm
+    scope: host
+    description: "Large number of ICMP port unreachable replies - service overwhelmed"
+    conditions:
+      - field: icmp_port_unreach_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.7
+
+  - name: Many different TLS SNI values
+    scope: flow
+    description: "High SNI churn to same backend - probing or multi-tenant attack"
+    conditions:
+      - field: unique_tls_sni
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.75
+
+  - name: Frequent TCP keepalive storms
+    scope: flow
+    description: "Excessive keepalive packets per connection"
+    conditions:
+      - field: keepalive_count
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.6
+
+  - name: HTTP pipeline flood (many pipelined requests)
+    scope: flow
+    description: "Many pipelined HTTP requests in short time"
+    conditions:
+      - field: http_pipelined_requests
+        op: '>'
+        value: 300
+    action: alert
+    confidence: 0.85
+
+  - name: Many HTTP 503 responses to requests
+    scope: target
+    description: "Target returning many 503s indicates overload"
+    conditions:
+      - field: http_503_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.88
+
+  - name: High packet duplication rate
+    scope: flow
+    description: "Many duplicate packets indicate retransmit/loop under load"
+    conditions:
+      - field: duplicate_packet_rate
+        op: '>'
+        value: 0.2
+    action: alert
+    confidence: 0.65
+
+  - name: Many TLS renegotiations
+    scope: host
+    description: "TLS renegotiation storms may be an attack"
+    conditions:
+      - field: tls_renegotiation_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.8
+
+  - name: High SYN-ACK response rate from server
+    scope: host
+    description: "Server sending many SYN-ACK (possibly trying to keep up under SYN flood)"
+    conditions:
+      - field: synack_count
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.85
+
+  - name: Many short TCP sessions with tiny payload
+    scope: flow
+    description: "Short-lived tiny payload sessions typical of some floods"
+    conditions:
+      - field: tiny_short_sessions
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.8
+
+  - name: High ICMP timestamp or address-mask flood
+    scope: flow
+    description: "Obsolete ICMP types used in reflection/amplification"
+    conditions:
+      - field: icmp_type_13_14_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.7
+
+  - name: Target port sticky flood
+    scope: host
+    description: "Many sources repeatedly to single service port causing saturation"
+    conditions:
+      - field: srcs_to_single_port
+        op: '>'
+        value: 500
+    action: alert
+    confidence: 0.9
+
+  - name: Many small HTTP range requests (cache-busting flood)
+    scope: flow
+    description: "Range requests abuse to bypass caching"
+    conditions:
+      - field: http_range_requests
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.85
+
+  - name: Many requests with slow request body send (chunked)
+    scope: flow
+    description: "Slow chunked bodies to keep connections open"
+    conditions:
+      - field: slow_chunked_bodies
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.9
+
+  - name: High TTL variance among src addresses
+    scope: global
+    description: "High TTL variance can indicate spoofed source IPs"
+    conditions:
+      - field: ttl_variance
+        op: '>'
+        value: 10
+    action: alert
+    confidence: 0.65
+
+  - name: Many small TCP window size zero events
+    scope: flow
+    description: "Window zero and zero-window probes causing stalls"
+    conditions:
+      - field: tcp_window_zero_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.6
+
+  - name: High sustained packet rate over long window
+    scope: target
+    description: "Sustained high PPS over 10 minutes"
+    conditions:
+      - field: sustained_pps_10m
+        op: '>'
+        value: 50000
+    action: alert
+    confidence: 0.95
+
+  - name: Websocket connection flood
+    scope: flow
+    description: "Many websocket upgrade requests in short time"
+    conditions:
+      - field: websocket_upgrade_count
+        op: '>'
+        value: 200
+    action: alert
+    confidence: 0.85
+
+  - name: Botnet C2-like beaconing with many peers
+    scope: host
+    description: "Host contacting many C2-like endpoints frequently"
+    conditions:
+      - field: beacon_unique_peers
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.75
+
+  - name: Many TLS certificates with same fingerprint
+    scope: flow
+    description: "Same cert fingerprint reused by many sources to fingerprint backend for attack"
+    conditions:
+      - field: tls_cert_reuse_count
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.7
+
+  - name: High HTTP header size variance
+    scope: flow
+    description: "Huge variance in header sizes may indicate probing/flood"
+    conditions:
+      - field: http_header_size_std
+        op: '>'
+        value: 1024
+    action: alert
+    confidence: 0.6
+
+  - name: Many simultaneous connections from fragmented src CIDR
+    scope: global
+    description: "Many sources from many subnets may indicate botnet"
+    conditions:
+      - field: unique_src_cidrs
+        op: '>'
+        value: 50
+    action: alert
+    confidence: 0.9
+
+  - name: HTTP cookie churn from single src
+    scope: flow
+    description: "Huge number of different cookies from source - bot behaviour"
+    conditions:
+      - field: unique_cookies
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.65
+
+  - name: Many connections failing TLS verify
+    scope: host
+    description: "A high rate of TLS verification failures can indicate mis/abuse"
+    conditions:
+      - field: tls_verify_failures
+        op: '>'
+        value: 100
+    action: alert
+    confidence: 0.7
+
+  - name: High HTTP pipelining of keep-alive mini requests
+    scope: flow
+    description: "Many tiny keep-alive requests straining connection pool"
+    conditions:
+      - field: very_small_keepalive_requests
+        op: '>'
+        value: 1000
+    action: alert
+    confidence: 0.78
